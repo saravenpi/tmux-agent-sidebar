@@ -10,7 +10,7 @@ interval="$(tmux show-option -gv @tmux-agent-sidebar-interval 2>/dev/null || ech
 width="$(tmux show-option -gv @tmux-agent-sidebar-width 2>/dev/null || echo 28)"
 
 is_on() {
-    [ "$(tmux show-option -gv "@agent-sidebar-on-$session" 2>/dev/null)" = "1" ] \
+    [ "$(tmux show-options -v -t "$session" "@agent-sidebar-on-$session" 2>/dev/null)" = "1" ] \
         || tmux list-panes -t "$session" -F '#{pane_start_command}' 2>/dev/null | grep -q "$MARKER"
 }
 
@@ -39,7 +39,8 @@ open_all() {
         # history-limit 1: the sidebar pane keeps no scrollback
         history_limit="$(tmux show-options -gv history-limit 2>/dev/null || echo 2000)"
         tmux set-option -w -t "$window" history-limit 1
-        tmux split-window -h -b -l "$width" -t "$window" \
+        left="$(tmux list-panes -t "$window" -F '#{pane_id} #{pane_left}' | sort -k2 -n | head -1 | awk '{print $1}')"
+        tmux split-window -h -b -l "$width" -t "$left" \
             "TMUX_AGENT_SIDEBAR_INTERVAL='$interval' bash '$SCRIPT_DIR/canvas.sh'"
         tmux set-option -w -t "$window" history-limit "$history_limit"
         # scope auto-close to this window; autoclose never kills a session
