@@ -52,7 +52,7 @@ case "$cmd" in
         now="$(date +%s)"
         window="$(tmux display-message -p -t "$pane_id" '#{window_index}:#{window_name}' 2>/dev/null || true)"
         summary="${summary//\"/\\\"}"
-        printf '{"pane":"%s","status":"%s","summary":"%s","window":"%s","updated":"%s"}\n' \
+        printf '{"pane":"%s","status":"%s","summary":"%s","window":"%s","updated":"%s","detected":false}\n' \
             "$pane_id" "$status" "$summary" "$window" "$now" \
             > "$STATE_DIR/$pane_id.json"
         ;;

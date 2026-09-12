@@ -7,6 +7,7 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STATE_DIR="${TMUX_AGENT_SIDEBAR_DIR:-$HOME/.cache/tmux-agent-sidebar}"
 INTERVAL="${TMUX_AGENT_SIDEBAR_INTERVAL:-2}"
+width="$(tmux display-message -p '#{pane_width}' 2>/dev/null || echo 28)"
 
 color_for() {
     case "$1" in
@@ -20,8 +21,9 @@ color_for() {
 
 render() {
     printf '\033[H\033[J'
+    printf '\r\n'
     printf '\033[1m agents\033[0m\r\n'
-    printf -- '────────────\r\n'
+    printf -- '\r\n'
     found=0
     for f in "$STATE_DIR"/*.json; do
         [ -f "$f" ] || continue
@@ -43,6 +45,9 @@ render() {
         else
             label="$window"
         fi
+        max=$(( width - 14 ))
+        [ "$max" -lt 8 ] && max=8
+        label="$(printf '%s' "$label" | cut -c1-"$max")"
         printf '%s%s\033[0m %s %s\r\n' "$icon" "$sym" "$window" "$label"
     done
     if [ "$found" -eq 0 ]; then
@@ -52,6 +57,7 @@ render() {
 
 mkdir -p "$STATE_DIR"
 while true; do
+    bash "$SCRIPT_DIR/detect.sh" 2>/dev/null || true
     render
     sleep "$INTERVAL"
 done
