@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+### Changed
+
+- Extra blank line above the " agents" title and a leading space before spinner/status icons
+
 ## 0.2.0
 
 ### Changed
