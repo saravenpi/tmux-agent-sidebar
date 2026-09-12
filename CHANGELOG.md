@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.2
+
+### Fixed
+
+- Sidebar pane now opens at the far left edge of the window in every layout, and focus returns to the leftmost non-canvas pane
+
 ## 0.2.1
 
 ### Changed

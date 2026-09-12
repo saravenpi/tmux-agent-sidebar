@@ -45,8 +45,10 @@ open_all() {
         # scope auto-close to this window; autoclose never kills a session
         tmux set-hook -w -t "$window" pane-died \
             "run-shell 'bash $SCRIPT_DIR/autoclose.sh $window'"
-        # focus back on the rightmost pane
-        tmux select-pane -t "$window" -R 2>/dev/null || true
+        # sidebar pane is leftmost; put focus back on the first non-canvas pane
+        for pane in $(tmux list-panes -t "$window" -F '#{pane_id} #{pane_left}' | sort -k2 -n | awk '$2 > 0 {print $1}'); do
+            tmux select-pane -t "$pane" && break
+        done
     done
 }
 
