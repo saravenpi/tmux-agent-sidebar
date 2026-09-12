@@ -1,13 +1,23 @@
 #!/usr/bin/env bash
-# Sidebar renderer: one line per pane that has agent state.
-# Run by tmux-agent-sidebar inside a narrow left pane; loops until killed.
+# Sidebar renderer: one line per agent pane, one single write per frame.
+#
+# Frame discipline:
+# - the frame is built as visible text + pad per line, then one write; the
+#   cursor moves with \r\n between lines, never inside a padded string
+# - history-limit 1 + no scrollback: the pane is a canvas, not a terminal
 
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STATE_DIR="${TMUX_AGENT_SIDEBAR_DIR:-$HOME/.cache/tmux-agent-sidebar}"
-INTERVAL="${TMUX_AGENT_SIDEBAR_INTERVAL:-2}"
-width="$(tmux display-message -p '#{pane_width}' 2>/dev/null || echo 28)"
+INTERVAL="${TMUX_AGENT_SIDEBAR_INTERVAL:-1}"
+
+SPINNER=('▖' '▘' '▝' '▗')
+tick=0
+
+dims() {
+    tmux display-message -p -t "${TMUX_PANE:-}" '#{pane_width}|#{pane_height}' 2>/dev/null || echo "28|40"
+}
 
 color_for() {
     case "$1" in
@@ -19,45 +29,80 @@ color_for() {
     esac
 }
 
-render() {
-    printf '\033[H\033[J'
-    printf '\r\n'
-    printf '\033[1m agents\033[0m\r\n'
-    printf -- '\r\n'
-    found=0
+sym_for_static() {
+    case "$1" in
+        waiting) printf '?' ;;
+        done)    printf '✓' ;;
+        *)       printf '·' ;;
+    esac
+}
+
+vlen() {
+    printf '%s' "$1" | sed 's/\x1b\[[0-9;]*m//g' | wc -m
+}
+
+build_frame() {
+    local width height
+    IFS='|' read -r width height <<< "$(dims)"
+    local usable=$(( width - 1 ))
+
+    frame=""
+    # one line = text, then pad of spaces to fill the row, then \r\n
+    add_line() {
+        local pad=$(( usable - $(vlen "$1") ))
+        [ "$pad" -lt 0 ] && pad=0
+        frame+="$1"
+        while [ "$pad" -gt 0 ]; do frame+=" "; pad=$(( pad - 1 )); done
+        frame+=$'\r\n'
+    }
+
+    add_line ""
+    add_line "\033[1m agents\033[0m"
+    add_line ""
+
+    local found=0
+    local lines=3
     for f in "$STATE_DIR"/*.json; do
         [ -f "$f" ] || continue
         found=1
+        lines=$(( lines + 1 ))
+        [ "$lines" -gt "$height" ] && break
+
         pane="$(sed -n 's/.*"pane"[: ]*"\([^"]*\)".*/\1/p' "$f")"
         status="$(sed -n 's/.*"status"[: ]*"\([^"]*\)".*/\1/p' "$f")"
         summary="$(sed -n 's/.*"summary"[: ]*"\([^"]*\)".*/\1/p' "$f")"
         window="$(sed -n 's/.*"window"[: ]*"\([^"]*\)".*/\1/p' "$f")"
         [ -n "$window" ] || window="$(tmux display-message -p -t "$pane" '#{window_index}:#{window_name}' 2>/dev/null || echo '?')"
+
         icon="$(color_for "$status")"
         case "$status" in
-            working) sym='▸' ;;
-            waiting) sym='?' ;;
-            done)    sym='✓' ;;
-            *)       sym='·' ;;
+            working) sym="${SPINNER[$(( tick % 4 ))]}" ;;
+            *)       sym="$(sym_for_static "$status")" ;;
         esac
-        if [ -n "$summary" ]; then
-            label="$summary"
-        else
-            label="$window"
+
+        local prefix="  $window "
+        local max=$(( usable - $(vlen "$prefix") - 2 ))
+        [ "$max" -lt 4 ] && max=4
+        if [ "$(vlen "$summary")" -gt "$max" ]; then
+            summary="${summary:0:$(( max - 1 ))}…"
         fi
-        max=$(( width - 14 ))
-        [ "$max" -lt 8 ] && max=8
-        label="$(printf '%s' "$label" | cut -c1-"$max")"
-        printf '%s%s\033[0m %s %s\r\n' "$icon" "$sym" "$window" "$label"
+
+        add_line "$icon$sym\033[0m $prefix$summary"
     done
-    if [ "$found" -eq 0 ]; then
-        printf '\033[90mno agents\033[0m\r\n'
-    fi
+    [ "$found" -eq 0 ] && add_line "\033[90mno agents\033[0m"
+
+    while [ "$lines" -lt "$height" ]; do
+        add_line ""
+        lines=$(( lines + 1 ))
+    done
+
+    printf "\033[H%b" "$frame"
 }
 
 mkdir -p "$STATE_DIR"
 while true; do
     bash "$SCRIPT_DIR/detect.sh" 2>/dev/null || true
-    render
+    build_frame 2>/dev/null || true
+    tick=$(( tick + 1 ))
     sleep "$INTERVAL"
 done
