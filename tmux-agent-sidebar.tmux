@@ -3,13 +3,10 @@
 
 CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-tmux bind-key A run-shell "bash '$CURRENT_DIR/scripts/toggle.sh'"
+tmux bind-key b run-shell "bash '$CURRENT_DIR/scripts/toggle.sh'"
 
-# sidebar canvas left alone in a window = close the window with it
-tmux set-hook -g pane-died "run-shell 'bash $CURRENT_DIR/scripts/autoclose.sh'"
-tmux set-hook -g after-kill-pane "run-shell 'bash $CURRENT_DIR/scripts/autoclose.sh'"
-
-# sidebar on + new window = sidebar opens in it too
+# sidebar on + new window = sidebar opens in it too (auto-close is scoped
+# per-window when the canvas pane is created, not via a global hook)
 tmux set-hook -g after-new-window \
     "run-shell \"bash $CURRENT_DIR/scripts/ensure.sh '#S'\""
 

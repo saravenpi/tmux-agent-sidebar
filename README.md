@@ -31,7 +31,7 @@ Then `prefix + I`. Options:
 ```tmux
 set -g @tmux-agent-sidebar-width 28      # sidebar pane width
 set -g @tmux-agent-sidebar-interval 2    # renderer refresh seconds
-set -g @tmux-agent-sidebar-key A         # toggle key (prefix A)
+set -g @tmux-agent-sidebar-key B         # toggle key (prefix b)
 ```
 
 Manual install: clone this repo anywhere and add:
@@ -40,7 +40,7 @@ Manual install: clone this repo anywhere and add:
 run '~/.tmux/plugins/tmux-agent-sidebar/tmux-agent-sidebar.tmux'
 ```
 
-Toggle with `prefix + A`.
+Toggle with `prefix + b`.
 
 ## Status bar mode
 
@@ -103,7 +103,7 @@ can be pruned with `scripts/agent-state.sh clear <pane-id>`.
 ## Files
 
 ```
-tmux-agent-sidebar.tmux   TPM entry point, binds prefix A
+tmux-agent-sidebar.tmux   TPM entry point, binds prefix b
 scripts/sidebar.sh        renderer loop (sidebar pane)
 scripts/toggle.sh         create/kill the sidebar pane
 scripts/statusline.sh     one-symbol-per-agent status-bar fragment

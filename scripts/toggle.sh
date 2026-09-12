@@ -42,6 +42,9 @@ open_all() {
         tmux split-window -h -b -l "$width" -t "$window" \
             "TMUX_AGENT_SIDEBAR_INTERVAL='$interval' bash '$SCRIPT_DIR/canvas.sh'"
         tmux set-option -w -t "$window" history-limit "$history_limit"
+        # scope auto-close to this window; autoclose never kills a session
+        tmux set-hook -w -t "$window" pane-died \
+            "run-shell 'bash $SCRIPT_DIR/autoclose.sh $window'"
         # focus back on the rightmost pane
         tmux select-pane -t "$window" -R 2>/dev/null || true
     done
