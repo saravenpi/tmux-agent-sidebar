@@ -56,7 +56,7 @@ case "$cmd" in
         window="$(tmux display-message -p -t "$pane_id" '#{window_index}:#{window_name}' 2>/dev/null || true)"
         summary="${summary//\"/\\\"}"
         harness="${HARNESS:-}"; harness="${harness//\"/}"
-        local fmt='{"pane":"%s","status":"%s","summary":"%s","window":"%s",'
+        fmt='{"pane":"%s","status":"%s","summary":"%s","window":"%s",'
         fmt+=' "updated":"%s","detected":false,"harness":"%s"}\n'
         printf "$fmt" \
             "$pane_id" "$status" "$summary" "$window" "$now" "$harness" \

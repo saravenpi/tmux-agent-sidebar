@@ -110,7 +110,18 @@ func readStates() []state {
 			states = append(states, s)
 		}
 	}
-	sort.Slice(states, func(i, j int) bool { return states[i].Window < states[j].Window })
+	winIndex := func(s state) int {
+		n := 0
+		fmt.Sscanf(s.Window, "%d", &n)
+		return n
+	}
+	sort.Slice(states, func(i, j int) bool {
+		wi, wj := winIndex(states[i]), winIndex(states[j])
+		if wi != wj {
+			return wi < wj
+		}
+		return states[i].Pane < states[j].Pane
+	})
 	return states
 }
 
