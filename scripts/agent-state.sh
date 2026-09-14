@@ -48,12 +48,18 @@ case "$cmd" in
         if [ -z "$summary" ] && [ -f "$STATE_DIR/$pane_id.json" ]; then
             summary="$(sed -n 's/.*"summary"[: ]*"\([^"]*\)".*/\1/p' "$STATE_DIR/$pane_id.json")"
         fi
+        if [ -z "${HARNESS:-}" ] && [ -f "$STATE_DIR/$pane_id.json" ]; then
+            HARNESS="$(sed -n 's/.*"harness"[: ]*"\([^"]*\)".*/\1/p' "$STATE_DIR/$pane_id.json")"
+        fi
         mkdir -p "$STATE_DIR"
         now="$(date +%s)"
         window="$(tmux display-message -p -t "$pane_id" '#{window_index}:#{window_name}' 2>/dev/null || true)"
         summary="${summary//\"/\\\"}"
-        printf '{"pane":"%s","status":"%s","summary":"%s","window":"%s","updated":"%s","detected":false}\n' \
-            "$pane_id" "$status" "$summary" "$window" "$now" \
+        harness="${HARNESS:-}"; harness="${harness//\"/}"
+        local fmt='{"pane":"%s","status":"%s","summary":"%s","window":"%s",'
+        fmt+=' "updated":"%s","detected":false,"harness":"%s"}\n'
+        printf "$fmt" \
+            "$pane_id" "$status" "$summary" "$window" "$now" "$harness" \
             > "$STATE_DIR/$pane_id.json"
         ;;
     get)

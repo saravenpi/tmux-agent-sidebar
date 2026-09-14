@@ -16,11 +16,10 @@ NACELLE_SESSIONS="$HOME/.nacelle/sessions"
 NOW="$(date +%s)"
 
 write_state() {
-    # $1 pane, $2 status, $3 summary, $4 window, $5 detected flag
-    local pane="$1" status="$2" summary="$3" window="$4" detected="$5"
+    local pane="$1" status="$2" summary="$3" window="$4" detected="$5" harness="${6:-}"
     summary="${summary//\"/\\\"}"
-    printf '{"pane":"%s","status":"%s","summary":"%s","window":"%s","updated":"%s","detected":%s}\n' \
-        "$pane" "$status" "$summary" "$window" "$NOW" "$detected" \
+    printf '{"pane":"%s","status":"%s","summary":"%s","window":"%s","updated":"%s","detected":%s,"harness":"%s"}\n' \
+        "$pane" "$status" "$summary" "$window" "$NOW" "$detected" "$harness" \
         > "$STATE_DIR/$pane.json"
 }
 
@@ -53,12 +52,22 @@ last_question() {
 mkdir -p "$STATE_DIR"
 pane_list="$(tmux list-panes -a -F '#{pane_id}|#{pane_pid}|#{window_index}:#{window_name}' 2>/dev/null || true)"
 
+harness_in_pane() {
+    local child
+    for child in $(pgrep -P "$1" 2>/dev/null); do
+        case "$(ps -o args= -p "$child" 2>/dev/null)" in
+            *nacelle*|*claude*|*codex*) return 0 ;;
+        esac
+    done
+    return 1
+}
+
 # prune state files for panes that no longer exist
 for f in "$STATE_DIR"/*.json; do
     [ -f "$f" ] || continue
     pane="$(sed -n 's/.*"pane"[: ]*"\([^"]*\)".*/\1/p' "$f")"
     [ -n "$pane" ] || continue
-    if ! printf '%s\n' "$pane_list" | grep -qF "$pane"; then
+    if ! printf '%s\n' "$pane_list" | grep -qF "$pane|"; then
         rm -f "$f"
     fi
 done
@@ -68,6 +77,7 @@ while IFS='|' read -r pane ppid window; do
 
     # hook-written state wins; only refresh detection-owned files
     if [ -f "$STATE_DIR/$pane.json" ] && ! grep -q '"detected":true' "$STATE_DIR/$pane.json"; then
+        harness_in_pane "$ppid" || rm -f "$STATE_DIR/$pane.json"
         continue
     fi
 
@@ -97,7 +107,7 @@ while IFS='|' read -r pane ppid window; do
     done
 
     if [ -n "$state" ]; then
-        write_state "$pane" "$state" "$summary" "$window" true
+        write_state "$pane" "$state" "$summary" "$window" true nacelle
     else
         rm -f "$STATE_DIR/$pane.json"
     fi

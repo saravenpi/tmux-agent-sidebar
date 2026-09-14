@@ -7,6 +7,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STATE_SCRIPT="$SCRIPT_DIR/../scripts/agent-state.sh"
+export HARNESS=claude
 
 event="${1:-}"
 payload="$(cat 2>/dev/null || true)"

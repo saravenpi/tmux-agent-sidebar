@@ -6,6 +6,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export HARNESS=codex
 
 event="${1:-}"
 payload="$(cat 2>/dev/null || true)"
