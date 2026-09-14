@@ -159,7 +159,7 @@ func (m model) View() string {
 	line("")
 	line("")
 	line("")
-	line(titleStyle.Render(" agents"))
+	line(titleStyle.Render(" Agents"))
 	line("")
 
 	states := readStates()
@@ -169,6 +169,7 @@ func (m model) View() string {
 		if s.Harness != "" {
 			line(idleStyle.Render("  " + s.Harness))
 		}
+		line("")
 		agents++
 	}
 	if agents == 0 {
@@ -176,7 +177,7 @@ func (m model) View() string {
 	}
 
 	// blank rows below the frame, capped at pane height
-	rows := 4 + 2*agents
+	rows := 4 + 3*agents
 	for rows < h && rows < 200 {
 		line("")
 		rows++
