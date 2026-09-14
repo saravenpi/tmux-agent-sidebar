@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0
+
+### Added
+
+- Kori harness support via detect.sh and generic agent-hook.sh adapter
+
 ## 0.4.1
 
 ### Fixed
