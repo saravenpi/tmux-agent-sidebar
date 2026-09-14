@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.1
+
+### Fixed
+
+- Sidebar window now auto-closes when its last non-canvas pane exits: `pane-died` only fires with `remain-on-exit` on, so the per-window hook never ran; it is now `pane-exited`
+
 ## 0.4.0
 
 ### Added
