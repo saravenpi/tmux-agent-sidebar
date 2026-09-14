@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0
+
+### Added
+
+- New bubbletea canvas renderer (`cmd/sidebar`) with MiniDot spinners, status colors, and per-pane harness labels
+- State JSON and detection now track which harness (nacelle, claude, codex) owns each pane
+- Hooks export `HARNESS` explicitly; stale hook state is pruned when no agent process remains in the pane
+
+### Fixed
+
+- Pane pruning no longer false-matches on pane-id prefixes
+
 ## 0.2.2
 
 ### Fixed
