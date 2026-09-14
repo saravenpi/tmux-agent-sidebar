@@ -44,7 +44,7 @@ open_all() {
             "TMUX_AGENT_SIDEBAR_INTERVAL='$interval' bash '$SCRIPT_DIR/canvas.sh'"
         tmux set-option -w -t "$window" history-limit "$history_limit"
         # scope auto-close to this window; autoclose never kills a session
-        tmux set-hook -w -t "$window" pane-died \
+        tmux set-hook -w -t "$window" pane-exited \
             "run-shell 'bash $SCRIPT_DIR/autoclose.sh $window'"
         # sidebar pane is leftmost; put focus back on the first non-canvas pane
         for pane in $(tmux list-panes -t "$window" -F '#{pane_id} #{pane_left}' | sort -k2 -n | awk '$2 > 0 {print $1}'); do

@@ -16,7 +16,7 @@ for window in $(tmux list-windows -t "$session" -F '#{window_id}' 2>/dev/null); 
     left="$(tmux list-panes -t "$window" -F '#{pane_id} #{pane_left}' | sort -k2 -n | head -1 | awk '{print $1}')"
     tmux split-window -h -b -l "$width" -t "$left" \
         "TMUX_AGENT_SIDEBAR_INTERVAL='$interval' bash '$SCRIPT_DIR/canvas.sh'"
-    tmux set-hook -w -t "$window" pane-died \
+    tmux set-hook -w -t "$window" pane-exited \
         "run-shell 'bash $SCRIPT_DIR/autoclose.sh $window'"
     for pane in $(tmux list-panes -t "$window" -F '#{pane_id} #{pane_left}' | sort -k2 -n | awk '$2 > 0 {print $1}'); do
         tmux select-pane -t "$pane" && break
