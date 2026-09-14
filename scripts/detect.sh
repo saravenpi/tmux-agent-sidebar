@@ -13,6 +13,7 @@ set -u
 
 STATE_DIR="${TMUX_AGENT_SIDEBAR_DIR:-$HOME/.cache/tmux-agent-sidebar}"
 NACELLE_SESSIONS="$HOME/.nacelle/sessions"
+KORI_SESSIONS="$HOME/.kori/sessions"
 NOW="$(date +%s)"
 
 write_state() {
@@ -56,7 +57,7 @@ harness_in_pane() {
     local child
     for child in $(pgrep -P "$1" 2>/dev/null); do
         case "$(ps -o args= -p "$child" 2>/dev/null)" in
-            *nacelle*|*claude*|*codex*) return 0 ;;
+            *nacelle*|*claude*|*codex*|*kori*) return 0 ;;
         esac
     done
     return 1
@@ -103,11 +104,21 @@ while IFS='|' read -r pane ppid window; do
                 fi
                 [ -n "$summary" ] || summary="nacelle"
                 ;;
+            kori)
+                f="$(ls -t "$KORI_SESSIONS"/*-"$child".jsonl 2>/dev/null | head -1)"
+                if [ -n "$f" ]; then
+                    state="$(nacelle_state "$f")"
+                    summary="$(last_question "$f")"
+                else
+                    state="idle"
+                fi
+                [ -n "$summary" ] || summary="kori"
+                ;;
         esac
     done
 
     if [ -n "$state" ]; then
-        write_state "$pane" "$state" "$summary" "$window" true nacelle
+        write_state "$pane" "$state" "$summary" "$window" true "$comm"
     else
         rm -f "$STATE_DIR/$pane.json"
     fi
