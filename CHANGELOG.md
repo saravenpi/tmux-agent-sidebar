@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.0
+
+### Added
+
+- Blank spacing line between agent entries in the sidebar
+
+### Changed
+
+- Title reads "Agents"
+
+### Fixed
+
+- Hook `set` command was completely broken: `local` outside a function aborted before writing state
+- Sidebar sorts windows numerically, so window 10 no longer sorts before window 2; ties within a window order by pane id
+
 ## 0.3.0
 
 ### Added
