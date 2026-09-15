@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- Antigravity CLI (agy) harness support with hooks/antigravity-hook.sh and detect.sh process detection
+
+## 0.5.0
+
+### Added
+
+- Antigravity CLI (agy) harness support with hooks/antigravity-hook.sh and detect.sh process detection
+
 ## 0.4.1
 
 ### Fixed

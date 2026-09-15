@@ -85,7 +85,7 @@ Add to `~/.claude/settings.json`:
 Add to `~/.codex/hooks.json` with the same event names, pointing at
 `hooks/codex-hook.sh`.
 
-### Any other agent (nacelle, marcel, vero, ...)
+### Any other agent (nacelle, marcel, vero, antigravity, ...)
 
 Call the CLI from a wrapper, cron, or the agent itself:
 
@@ -110,6 +110,7 @@ scripts/statusline.sh     one-symbol-per-agent status-bar fragment
 scripts/agent-state.sh    state CLI (set/get/clear)
 hooks/claude-hook.sh      Claude Code hook adapter
 hooks/codex-hook.sh       Codex hook adapter
+hooks/antigravity-hook.sh  Antigravity CLI hook adapter
 ```
 
 ## Notes
