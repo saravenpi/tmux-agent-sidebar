@@ -57,7 +57,7 @@ harness_in_pane() {
     local child
     for child in $(pgrep -P "$1" 2>/dev/null); do
         case "$(ps -o args= -p "$child" 2>/dev/null)" in
-            *nacelle*|*claude*|*codex*|*kori*) return 0 ;;
+            *nacelle*|*claude*|*codex*|*kori*|*antigravity*|*agy*) return 0 ;;
         esac
     done
     return 1
@@ -113,6 +113,10 @@ while IFS='|' read -r pane ppid window; do
                     state="idle"
                 fi
                 [ -n "$summary" ] || summary="kori"
+                ;;
+            agy|antigravity)
+                state="idle"
+                summary="antigravity"
                 ;;
         esac
     done
