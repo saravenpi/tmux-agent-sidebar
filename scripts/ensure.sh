@@ -2,6 +2,8 @@
 # Open a sidebar in every window of the given session that lacks one.
 # Called by after-new-window when the session's sidebar is on.
 
+set -u
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 session="${1:-$(tmux display-message -p '#{session_name}' 2>/dev/null)}"
 [ -n "$session" ] || exit 0
@@ -18,7 +20,9 @@ for window in $(tmux list-windows -t "$session" -F '#{window_id}' 2>/dev/null); 
         "TMUX_AGENT_SIDEBAR_INTERVAL='$interval' bash '$SCRIPT_DIR/canvas.sh'"
     tmux set-hook -w -t "$window" pane-exited \
         "run-shell 'bash $SCRIPT_DIR/autoclose.sh $window'"
-    for pane in $(tmux list-panes -t "$window" -F '#{pane_id} #{pane_left}' | sort -k2 -n | awk '$2 > 0 {print $1}'); do
+    panes="$(tmux list-panes -t "$window" -F '#{pane_id} #{pane_left}' \
+        | sort -k2 -n | awk '$2 > 0 {print $1}')"
+    for pane in $panes; do
         tmux select-pane -t "$pane" && break
     done
 done

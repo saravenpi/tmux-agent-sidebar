@@ -37,30 +37,6 @@ var (
 	idleStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
 )
 
-func styleFor(s string) lipgloss.Style {
-	switch s {
-	case "working":
-		return workingStyle
-	case "waiting":
-		return waitingStyle
-	case "done":
-		return doneStyle
-	default:
-		return idleStyle
-	}
-}
-
-func symFor(s string) string {
-	switch s {
-	case "waiting":
-		return "?"
-	case "done":
-		return "✓"
-	default:
-		return "·"
-	}
-}
-
 func expand(p string) string {
 	if strings.HasPrefix(p, "~") {
 		home, _ := os.UserHomeDir()
@@ -69,21 +45,13 @@ func expand(p string) string {
 	return p
 }
 
-func tmux(format string) string {
+func tmux(target, format string) string {
 	args := []string{"display-message", "-p"}
-	if pane := os.Getenv("TMUX_PANE"); pane != "" {
-		args = append(args, "-t", pane)
+	if target != "" {
+		args = append(args, "-t", target)
 	}
 	args = append(args, format)
 	out, err := exec.Command("tmux", args...).Output()
-	if err != nil {
-		return ""
-	}
-	return strings.TrimSpace(string(out))
-}
-
-func paneFormat(pane, format string) string {
-	out, err := exec.Command("tmux", "display-message", "-p", "-t", pane, format).Output()
 	if err != nil {
 		return ""
 	}
@@ -110,23 +78,13 @@ func readStates() []state {
 			states = append(states, s)
 		}
 	}
-	winIndex := func(s state) int {
-		n := 0
-		fmt.Sscanf(s.Window, "%d", &n)
-		return n
-	}
 	sort.Slice(states, func(i, j int) bool {
-		wi, wj := winIndex(states[i]), winIndex(states[j])
-		if wi != wj {
-			return wi < wj
-		}
-		return states[i].Pane < states[j].Pane
+		wi, wj := 0, 0
+		fmt.Sscanf(states[i].Window, "%d", &wi)
+		fmt.Sscanf(states[j].Window, "%d", &wj)
+		return wi < wj || wi == wj && states[i].Pane < states[j].Pane
 	})
 	return states
-}
-
-func visibleLen(s string) int {
-	return len([]rune(ansi.Strip(s)))
 }
 
 type model struct {
@@ -135,10 +93,11 @@ type model struct {
 
 type redrawMsg struct{}
 
-func redraw() tea.Cmd { return tea.Tick(time.Second, func(t time.Time) tea.Msg { return redrawMsg{} }) }
-
 func (m model) Init() tea.Cmd {
-	return tea.Batch(m.spinner.Tick, redraw())
+	return tea.Batch(
+		m.spinner.Tick,
+		tea.Tick(time.Second, func(t time.Time) tea.Msg { return redrawMsg{} }),
+	)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -148,14 +107,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.spinner, cmd = m.spinner.Update(msg)
 		return m, cmd
 	case redrawMsg:
-		return m, redraw()
+		return m, tea.Tick(time.Second, func(t time.Time) tea.Msg { return redrawMsg{} })
 	}
 	return m, nil
 }
 
 func (m model) View() string {
 	var w, h int
-	fmt.Sscanf(tmux("#{pane_width}|#{pane_height}"), "%d|%d", &w, &h)
+	fmt.Sscanf(tmux(os.Getenv("TMUX_PANE"), "#{pane_width}|#{pane_height}"), "%d|%d", &w, &h)
 	usable := w - 1
 	if usable <= 0 {
 		return ""
@@ -163,35 +122,26 @@ func (m model) View() string {
 
 	var b strings.Builder
 	line := func(s string) {
-		b.WriteString(s)
-		b.WriteString(strings.Repeat(" ", max(0, usable-visibleLen(s))))
-		b.WriteString("\n")
+		b.WriteString(s + strings.Repeat(" ", max(0, usable-len([]rune(ansi.Strip(s))))) + "\n")
 	}
-	line("")
-	line("")
-	line("")
+	for range 3 { line("") }
 	line(titleStyle.Render(" Agents"))
 	line("")
 
 	states := readStates()
-	agents := 0
+	if len(states) == 0 {
+		line(idleStyle.Render("no agents"))
+	}
 	for _, s := range states {
 		line(m.agentLine(s, usable))
 		if s.Harness != "" {
 			line(idleStyle.Render("  " + s.Harness))
 		}
 		line("")
-		agents++
-	}
-	if agents == 0 {
-		line(idleStyle.Render("no agents"))
 	}
 
-	// blank rows below the frame, capped at pane height
-	rows := 4 + 3*agents
-	for rows < h && rows < 200 {
+	for rows := 4 + 3*len(states); rows < h && rows < 200; rows++ {
 		line("")
-		rows++
 	}
 	return b.String()
 }
@@ -200,8 +150,12 @@ func (m model) agentLine(s state, usable int) string {
 	var sym string
 	if s.Status == "working" {
 		sym = workingStyle.Render(" " + m.spinner.View() + " ")
+	} else if s.Status == "waiting" {
+		sym = waitingStyle.Render(" ? ")
+	} else if s.Status == "done" {
+		sym = doneStyle.Render(" ✓ ")
 	} else {
-		sym = styleFor(s.Status).Render(" " + symFor(s.Status) + " ")
+		sym = idleStyle.Render(" · ")
 	}
 	num := s.Window
 	if i := strings.Index(num, ":"); i >= 0 {
@@ -210,12 +164,12 @@ func (m model) agentLine(s state, usable int) string {
 	if num == "" {
 		num = "?"
 	}
-	title := paneFormat(s.Pane, "#{window_name}")
+	title := tmux(s.Pane, "#{window_name}")
 	if title == "" {
 		title = "?"
 	}
 	title = strings.NewReplacer("\n", " ", "\r", " ").Replace(title)
-	budget := usable - visibleLen(sym+" "+num+": ") - 2
+	budget := usable - len([]rune(ansi.Strip(sym+" "+num+": "))) - 2
 	if budget < 4 {
 		budget = 4
 	}
@@ -223,13 +177,6 @@ func (m model) agentLine(s state, usable int) string {
 		title = ansi.Truncate(title, budget-1, "…")
 	}
 	return sym + " " + num + ": " + title
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
 }
 
 func main() {

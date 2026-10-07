@@ -1,7 +1,7 @@
 # tmux-agent-sidebar
 
 A toggleable left sidebar for tmux showing a per-window/per-pane summary and
-status of AI coding agents (Claude Code, Codex, or any agent you wire up).
+status of AI coding agents (Claude Code, Codex, Bulle, or any agent you wire up).
 
 Original implementation, no external plugin code. State flows through small
 JSON status files under `~/.cache/tmux-agent-sidebar/`, written by agent

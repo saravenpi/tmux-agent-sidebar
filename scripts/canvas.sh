@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # run process detection in the background, render frames with the Go canvas
+set -u
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 interval="${TMUX_AGENT_SIDEBAR_INTERVAL:-1}"

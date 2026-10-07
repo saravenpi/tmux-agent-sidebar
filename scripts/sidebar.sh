@@ -72,7 +72,10 @@ build_frame() {
         status="$(sed -n 's/.*"status"[: ]*"\([^"]*\)".*/\1/p' "$f")"
         summary="$(sed -n 's/.*"summary"[: ]*"\([^"]*\)".*/\1/p' "$f")"
         window="$(sed -n 's/.*"window"[: ]*"\([^"]*\)".*/\1/p' "$f")"
-        [ -n "$window" ] || window="$(tmux display-message -p -t "$pane" '#{window_index}:#{window_name}' 2>/dev/null || echo '?')"
+        if [ -z "$window" ]; then
+            window="$(tmux display-message -p -t "$pane" \
+                '#{window_index}:#{window_name}' 2>/dev/null || echo '?')"
+        fi
 
         icon="$(color_for "$status")"
         case "$status" in

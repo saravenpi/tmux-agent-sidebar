@@ -1,12 +1,21 @@
 # Changelog
 
-## [Unreleased]
+## 0.7.0
 
 ### Added
 
-- Antigravity CLI (agy) harness support with hooks/antigravity-hook.sh and detect.sh process detection
+- Bulle harness support with hooks/bulle-hook.sh and detect.sh process detection
 
-## 0.5.0
+### Changed
+
+- Renamed kori harness references to bulle throughout (detect.sh, agent-hook.sh)
+
+### Fixed
+
+- Go canvas: reduced function count from 14 to 8, split long functions, added `set -u` to all shell scripts
+- Shell scripts: all long lines under 120 chars, `set -u` added to toggle.sh, canvas.sh, ensure.sh, statusline.sh; `set -euo pipefail` to autoclose.sh
+
+## 0.6.0
 
 ### Added
 

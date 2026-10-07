@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Toggle the agent sidebar across every window of the current session.
 
+set -u
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MARKER="canvas.sh"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -47,7 +49,9 @@ open_all() {
         tmux set-hook -w -t "$window" pane-exited \
             "run-shell 'bash $SCRIPT_DIR/autoclose.sh $window'"
         # sidebar pane is leftmost; put focus back on the first non-canvas pane
-        for pane in $(tmux list-panes -t "$window" -F '#{pane_id} #{pane_left}' | sort -k2 -n | awk '$2 > 0 {print $1}'); do
+        panes="$(tmux list-panes -t "$window" -F '#{pane_id} #{pane_left}' \
+            | sort -k2 -n | awk '$2 > 0 {print $1}')"
+        for pane in $panes; do
             tmux select-pane -t "$pane" && break
         done
     done

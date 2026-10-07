@@ -15,7 +15,7 @@ payload="$(cat 2>/dev/null || true)"
 harness="${HARNESS:-}"
 if [ -z "$harness" ]; then
     ppid="$(ps -o ppid= -p $$ 2>/dev/null || true)"
-    harness="$(ps -o args= -p "$ppid" 2>/dev/null | grep -o 'kori\|nacelle\|claude\|codex' | head -1)"
+    harness="$(ps -o args= -p "$ppid" 2>/dev/null | grep -o 'bulle\|nacelle\|claude\|codex' | head -1)"
 fi
 export HARNESS="${harness:-agent}"
 

@@ -4,8 +4,10 @@
 # kill a whole session. Called with the window id by the per-window pane-exited
 # hook set in toggle.sh / ensure.sh; with no argument it does nothing.
 
+set -euo pipefail
+
 MARKER="canvas.sh"
-window="$1"
+window="${1:-}"
 [ -n "$window" ] || exit 0
 
 session="$(tmux display-message -p -t "$window" '#{session_id}' 2>/dev/null)" || exit 0

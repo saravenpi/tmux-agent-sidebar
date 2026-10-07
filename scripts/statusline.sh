@@ -2,6 +2,8 @@
 # Compact status-bar fragment: one colored symbol per agent pane.
 # Usage in tmux.conf:  set -g status-right "#(bash ~/.tmux/plugins/tmux-agent-sidebar/scripts/statusline.sh)"
 
+set -u
+
 STATE_DIR="${TMUX_AGENT_SIDEBAR_DIR:-$HOME/.cache/tmux-agent-sidebar}"
 
 out=""
